@@ -1,6 +1,6 @@
 # fireworks
 
-A custom fireworks generator that uses HTML Canvas and vanilla JavaScript.
+A custom fireworks generator that uses HTML Canvas and vanilla JavaScript, now with fancy particle effects!
 
 ## To Do
 
