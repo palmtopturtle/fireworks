@@ -2,19 +2,24 @@ body {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background: linear-gradient(#101730, #292052);
 }
 
-canvas.fireworks-display {
-  display: block;
-  touch-action: manipulation;
-  background: transparent;
-  height: 100%;
-  cursor: pointer;
-}
-
+canvas.fireworks-display,
 canvas.sky-display {
   position: fixed;
   inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+canvas.fireworks-display {
+  touch-action: manipulation;
+  cursor: pointer;
+  background: transparent;
+}
+
+canvas.sky-display {
+  background: linear-gradient(#101730, #292052);
   z-index: -1;
 }
