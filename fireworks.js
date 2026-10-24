@@ -2,24 +2,19 @@
 const fireworksCanvasElement = document.createElement("canvas");
 const fireworksCanvas = fireworksCanvasElement.getContext("2d");
 fireworksCanvasElement.className = "fireworks-display";
-document.body.appendChild(fireworksCanvasElement);
+document.body.prepend(fireworksCanvasElement);
 
 const skyCanvasElement = document.createElement("canvas");
 const skyCanvas = skyCanvasElement.getContext("2d");
 skyCanvasElement.className = "sky-display";
 document.body.prepend(skyCanvasElement);
 
-const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 const touchOrClick = "ontouchstart" in window ? "touchstart" : "click";
 
-/* Fixes width=0 bug for iOS */
-function setSize() {
-    fireworksCanvasElement.width = skyCanvasElement.width = iOS ? screen.width : window.innerWidth;
-    fireworksCanvasElement.height = skyCanvasElement.height = iOS ? screen.height : window.innerHeight;
-    nightSkyDisplay?.resize(window.innerWidth, window.innerHeight);
-}
-
 /* Constants */
+const MAX_DPR = 2;
+const REFERENCE_SIZE = 640; // Smallest viewport size to render full world scale (worldScale = 1)
+const MIN_WORLD_SCALE = 0.6; // Do not shrink scale beyond this
 const TWOPI = Math.PI * 2;
 const FRICTION = 0.95;
 const PARTICLE_GRAVITY = 0.5;
@@ -31,6 +26,39 @@ const PXL = 2; // One "pixel" for consistent stylized, pixelated drawing
 const STAR_COLOR = "255, 252, 235";
 const STAR_DENSITY = 1 / 9000; // One star per ~95×95 px area
 
+/* Handling canvas size and different resolutions/displays */
+let viewWidth = 0;
+let viewHeight = 0;
+let dpr = 1;
+let stylePxl = PXL; // Keep stylized pixels crisp on high resolution displays
+
+let worldScale = 1;
+let worldWidth = 0;
+let worldHeight = 0;
+
+function setSize() {
+  viewWidth = fireworksCanvasElement.clientWidth;
+  viewHeight = fireworksCanvasElement.clientHeight;
+  dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
+  stylePxl = Math.max(1, Math.round(PXL * dpr)) / dpr;
+
+  // On smaller viewports, decrease the size of the fireworks
+  const smallestSize = Math.min(viewWidth, viewHeight);
+  worldScale = Math.min(1, Math.max(MIN_WORLD_SCALE, smallestSize / REFERENCE_SIZE));
+  worldWidth = viewWidth / worldScale;
+  worldHeight = viewHeight / worldScale;
+
+  // Use CSS viewport for proper canvas width and height
+  for (const el of [fireworksCanvasElement, skyCanvasElement]) {
+    el.width = Math.round(viewWidth * dpr);
+    el.height = Math.round(viewHeight * dpr);
+  }
+  fireworksCanvas.setTransform(dpr * worldScale, 0, 0, dpr * worldScale, 0, 0); // Scale fireworks to world size
+  skyCanvas.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  nightSkyDisplay.resize(viewWidth, viewHeight);
+}
+
 /* Event Listeners */
 window.addEventListener("load", setSize);
 
@@ -38,11 +66,11 @@ fireworksCanvasElement.addEventListener(touchOrClick, e => {
   e.stopPropagation();
   e.preventDefault();
   if (touchOrClick === "click") {
-    fireworksDisplay.add(new FireworkRocket(e.clientX, e.clientY));
+    fireworksDisplay.add(new FireworkRocket(e.clientX / worldScale, e.clientY / worldScale));
   } else {
     // Necessary for iOS...
     fireworksDisplay.add(
-      new FireworkRocket(e.touches[0].clientX, e.touches[0].clientY)
+      new FireworkRocket(e.touches[0].clientX / worldScale, e.touches[0].clientY / worldScale)
     );
   }
 });
@@ -63,7 +91,7 @@ function calcYVelocity(angle, denominator) {
 }
 
 function snapToPxl(v) {
-  return Math.round(v / PXL) * PXL;
+  return Math.round(v / stylePxl) * stylePxl;
 }
 
 /* Memoized glowing sprites used for particles */
@@ -102,15 +130,15 @@ function drawSparkle(x, y, arm, alpha) {
   const px = snapToPxl(x), py = snapToPxl(y);
 
   skyCanvas.fillStyle = `rgba(${STAR_COLOR}, ${alpha})`;
-  skyCanvas.fillRect(px, py, PXL, PXL);
+  skyCanvas.fillRect(px, py, stylePxl, stylePxl);
 
   // Four arms, dimming toward the tips
   for (let i = 1; i <= arm; i++) {
     skyCanvas.fillStyle = `rgba(${STAR_COLOR}, ${alpha * (1 - i / (arm + 1))})`;
-    skyCanvas.fillRect(px + i * PXL, py, PXL, PXL); // +X
-    skyCanvas.fillRect(px - i * PXL, py, PXL, PXL); // -X
-    skyCanvas.fillRect(px, py + i * PXL, PXL, PXL); // +Y
-    skyCanvas.fillRect(px, py - i * PXL, PXL, PXL); // -Y
+    skyCanvas.fillRect(px + i * stylePxl, py, stylePxl, stylePxl); // +X
+    skyCanvas.fillRect(px - i * stylePxl, py, stylePxl, stylePxl); // -X
+    skyCanvas.fillRect(px, py + i * stylePxl, stylePxl, stylePxl); // +Y
+    skyCanvas.fillRect(px, py - i * stylePxl, stylePxl, stylePxl); // -Y
   }
 }
 
@@ -119,7 +147,7 @@ class FireworkRocket {
   constructor(x, yTarget) {
     this.x = x;
     this.yTarget = yTarget;
-    this.y = fireworksCanvasElement.height; // Always starts at bottom
+    this.y = worldHeight; // Always starts at bottom
     this.isExploded = false;
     this.particleCount = Math.floor(randomRange(8, 16));
 
@@ -259,8 +287,8 @@ class Star {
 
   draw(t) {
     const glint = this.glint(t);
-    const x = this.x * skyCanvasElement.width;
-    const y = this.y * skyCanvasElement.height;
+    const x = this.x * viewWidth;
+    const y = this.y * viewHeight;
 
     if (this.starType === 0) {
       // Dots blink between dim and bright
@@ -292,6 +320,7 @@ class Fireworks {
   }
 
   drawAll() {
+    fireworksCanvas.clearRect(0, 0, worldWidth, worldHeight);
     for (const e of this.entities) e.draw();
   }
 }
@@ -316,7 +345,7 @@ class Sky {
   }
 
   draw(t) {
-    skyCanvas.clearRect(0, 0, skyCanvasElement.width, skyCanvasElement.height);
+    skyCanvas.clearRect(0, 0, viewWidth, viewHeight);
     for (const star of this.stars) star.draw(t);
   }
 }
@@ -335,7 +364,6 @@ function animate(now) {
 
   nightSkyDisplay.draw(now);
 
-  fireworksCanvas.clearRect(0, 0, fireworksCanvasElement.width, fireworksCanvasElement.height);
   fireworksCanvas.globalCompositeOperation = "lighter";
   fireworksDisplay.drawAll();
   fireworksDisplay.updateAll(dt);
