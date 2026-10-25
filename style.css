@@ -14,9 +14,12 @@ canvas.sky-display {
 }
 
 canvas.fireworks-display {
-  touch-action: manipulation;
+  touch-action: none;
   cursor: pointer;
   background: transparent;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 canvas.sky-display {

@@ -9,8 +9,6 @@ const skyCanvas = skyCanvasElement.getContext("2d");
 skyCanvasElement.className = "sky-display";
 document.body.prepend(skyCanvasElement);
 
-const touchOrClick = "ontouchstart" in window ? "touchstart" : "click";
-
 /* Constants */
 const MAX_DPR = 2;
 const REFERENCE_SIZE = 640; // Smallest viewport size to render full world scale (worldScale = 1)
@@ -62,17 +60,9 @@ function setSize() {
 /* Event Listeners */
 window.addEventListener("load", setSize);
 
-fireworksCanvasElement.addEventListener(touchOrClick, e => {
-  e.stopPropagation();
+fireworksCanvasElement.addEventListener("pointerdown", e => {
   e.preventDefault();
-  if (touchOrClick === "click") {
-    fireworksDisplay.add(new FireworkRocket(e.clientX / worldScale, e.clientY / worldScale));
-  } else {
-    // Necessary for iOS...
-    fireworksDisplay.add(
-      new FireworkRocket(e.touches[0].clientX / worldScale, e.touches[0].clientY / worldScale)
-    );
-  }
+  fireworksDisplay.add(new FireworkRocket(e.clientX / worldScale, e.clientY / worldScale));
 });
 
 window.addEventListener("resize", setSize);
