@@ -9,6 +9,9 @@ import {
 import { Fireworks } from "./entities/Fireworks.js";
 import { FireworkRocket } from "./entities/FireworkRocket.js";
 import { Sky } from "./sky/Sky.js";
+import { pickRandomType, enabledTypes } from "./settings.js";
+import { buildToolbox } from "./ui/toolbox.js";
+import { FIREWORK_TYPES } from "./fireworkTypes.js";
 
 const fireworksDisplay = new Fireworks();
 const nightSkyDisplay = new Sky();
@@ -18,15 +21,20 @@ function handleResize() {
   nightSkyDisplay.resize(viewWidth, viewHeight);
 }
 
+buildToolbox(document.querySelector("[data-toolbox-options]"), FIREWORK_TYPES, enabledTypes);
+
 /* Event Listeners */
 window.addEventListener("load", handleResize);
 window.addEventListener("resize", handleResize);
 
 fireworksCanvasElement.addEventListener("pointerdown", e => {
   e.preventDefault();
-  fireworksDisplay.add(
-    new FireworkRocket(e.clientX / worldScale, e.clientY / worldScale, fireworksDisplay)
-  );
+  fireworksDisplay.add(new FireworkRocket({
+    x: e.clientX / worldScale,
+    yTarget: e.clientY / worldScale,
+    display: fireworksDisplay,
+    type: pickRandomType(),
+  }));
 });
 
 /* Animation */

@@ -1,3 +1,8 @@
+:root {
+  --accent-color: #f5b74a;
+  --text-color: #fffceb;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -25,4 +30,99 @@ canvas.fireworks-display {
 canvas.sky-display {
   background: linear-gradient(#101730, #292052);
   z-index: -1;
+}
+
+/* Toolbox for enabling and disabling firework types */
+.toolbox {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: fit-content;
+  z-index: 1;
+  max-width: calc(100vw - 32px);
+  box-sizing: border-box;
+  /* Accounts for iOS homebar */
+  padding: 0 16px env(safe-area-inset-bottom);
+  background: rgba(16, 23, 48, 0.5);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 252, 235, 0.15);
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+  color: var(--text-color);
+  font-size: 14px;
+  line-height: 1.4;
+  font-family: system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.toolbox summary {
+  padding: 10px 4px;
+  text-align: center;
+  cursor: pointer;
+  list-style: none;
+}
+
+.toolbox summary::-webkit-details-marker {
+  display: none;
+}
+
+.toolbox summary::after {
+  content: " ▴";
+  opacity: 0.6;
+}
+
+.toolbox[open] summary::after {
+  content: " ▾";
+}
+
+.toolbox-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0 0 14px;
+  border: none;
+}
+
+/* Kept for screen readers only */
+.toolbox-options legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.toolbox-options label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 252, 235, 0.25);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.toolbox-options label:has(input:checked) {
+  background: rgba(255, 252, 235, 0.15);
+  border-color: rgba(255, 252, 235, 0.5);
+}
+
+.toolbox-options label:has(input:disabled) {
+  cursor: not-allowed;
+}
+
+.toolbox-options input {
+  margin: 0;
+  accent-color: var(--accent-color);
+}
+
+.toolbox summary:focus-visible,
+.toolbox-options label:has(input:focus-visible) {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
 }

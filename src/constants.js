@@ -1,3 +1,4 @@
+// todo: move these to their appropriate modules
 export const MAX_DPR = 2;
 export const REFERENCE_SIZE = 640; // Smallest viewport size to render full world scale (worldScale = 1)
 export const MIN_WORLD_SCALE = 0.6; // Do not shrink scale beyond this

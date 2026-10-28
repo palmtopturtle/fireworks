@@ -1,15 +1,17 @@
 import { ROCKET_GRAVITY, SPARK_SPACING } from "../constants.js";
 import { worldHeight } from "../canvas.js";
 import { drawGlow } from "../sprites.js";
-import { randomRange, calcXVelocity, calcYVelocity } from "../utils.js";
+import { randomRange } from "../utils.js";
 import { FireworkParticle } from "./FireworkParticle.js";
 import { Spark } from "./Spark.js";
+import { PATTERNS } from "../explosionPatterns.js";
 
 export class FireworkRocket {
-  constructor(x, yTarget, display) {
+  constructor({ x, yTarget, display, type }) {
     this.x = x;
     this.yTarget = yTarget;
     this.display = display;
+    this.type = type;
     this.y = worldHeight; // Always starts at bottom
     this.isExploded = false;
     this.particleCount = Math.floor(randomRange(8, 16));
@@ -17,9 +19,7 @@ export class FireworkRocket {
     const height = this.y - yTarget;
     this.vy = -Math.sqrt(2 * ROCKET_GRAVITY * height); // More natural deceleration using gravity physics
 
-    // Speed, radius, and color are consistent across each particle created from a firework instance
-    this.speed = randomRange(4, 8);
-    this.radius = randomRange(4, 6);
+    // Color is consistent across each particle created from a firework instance
     this.hue = Math.floor(randomRange(0, 360));
 
     this.numGeneratedSparks = 0; // Can spawn more than 1 when firework moves upwards at speeds greater than 6px per frame
@@ -30,11 +30,19 @@ export class FireworkRocket {
   }
 
   createExplosion() {
-    for (let i = 0; i < this.particleCount; i++) {
-      const dx = calcXVelocity(i, this.particleCount);
-      const dy = calcYVelocity(i, this.particleCount);
-      this.display.add(new FireworkParticle(this, dx, dy));
+    const type = this.type;
+    const count = Math.floor(randomRange(...type.count));
+    const speed = randomRange(...type.speed);   // Shared by every particle in this explosion
+    const radius = randomRange(...type.radius);
+
+    for (const { angle, speedScale } of PATTERNS[type.pattern](count)) {
+      this.display.add(new FireworkParticle({
+        x: this.x, y: this.y, angle, radius, hue: this.hue,
+        speed: speed * speedScale,
+        ...type.physics,
+      }));
     }
+
     this.isExploded = true; // Flags firework for removal
   }
 
