@@ -1,31 +1,32 @@
-import { FRICTION, PARTICLE_GRAVITY } from "../constants.js";
 import { drawGlow } from "../sprites.js";
 
 export class FireworkParticle {
-  constructor({
-    x, y, angle, speed, radius, hue,
-    friction = FRICTION,
-    gravity = PARTICLE_GRAVITY,
-    fadeRate = 0.01,
-  }) {
+  constructor({ x, y, angle, speed, radius, hue,
+    drag = 0.95, gravity = 0.025, fadeStart = 35, fadeRate = 0.01 }
+  ) {
     this.x = x;
     this.y = y;
-    this.dx = Math.cos(angle);
-    this.dy = Math.sin(angle);
-    this.speed = speed;
+    this.vx = Math.cos(angle) * speed;
+    this.vy = Math.sin(angle) * speed;
     this.radius = radius;
     this.hue = hue;
-    this.friction = friction;
+    this.drag = drag;
     this.gravity = gravity;
+    this.fadeStart = fadeStart;
     this.fadeRate = fadeRate;
+    this.age = 0;
     this.alpha = 1;
   }
 
   update(dt) {
-    this.speed *= this.friction ** dt;
-    this.x += this.dx * this.speed * dt;
-    this.y += (this.dy * this.speed + this.gravity) * dt;
-    if (this.speed < 1) this.alpha = Math.max(0, this.alpha - this.fadeRate * dt);
+    const drag = this.drag ** dt;
+    this.vx *= drag;
+    this.vy = this.vy * drag + this.gravity * dt; // gravity accumulates into curved path
+    this.x += this.vx * dt;
+    this.y += this.vy * dt;
+
+    this.age += dt;
+    if (this.age > this.fadeStart) this.alpha = Math.max(0, this.alpha - this.fadeRate * dt);
   }
 
   draw() {

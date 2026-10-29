@@ -1,10 +1,11 @@
-import { ROCKET_GRAVITY, SPARK_SPACING } from "../constants.js";
 import { worldHeight } from "../canvas.js";
 import { drawGlow } from "../sprites.js";
 import { randomRange } from "../utils.js";
-import { FireworkParticle } from "./FireworkParticle.js";
 import { Spark } from "./Spark.js";
 import { PATTERNS } from "../explosionPatterns.js";
+
+const ROCKET_GRAVITY = 0.35;
+const SPARK_SPACING = 6; // How far a rocket must travel to generate a spark
 
 export class FireworkRocket {
   constructor({ x, yTarget, display, type }) {
@@ -19,8 +20,7 @@ export class FireworkRocket {
     const height = this.y - yTarget;
     this.vy = -Math.sqrt(2 * ROCKET_GRAVITY * height); // More natural deceleration using gravity physics
 
-    // Color is consistent across each particle created from a firework instance
-    this.hue = Math.floor(randomRange(0, 360));
+    this.hue = Math.floor(randomRange(0, 360)); // Color is consistent across each particle created from a firework instance
 
     this.numGeneratedSparks = 0; // Can spawn more than 1 when firework moves upwards at speeds greater than 6px per frame
   }
@@ -32,13 +32,19 @@ export class FireworkRocket {
   createExplosion() {
     const type = this.type;
     const count = Math.floor(randomRange(...type.count));
-    const speed = randomRange(...type.speed);   // Shared by every particle in this explosion
+    const speed = randomRange(...type.speed); // Shared by every particle in this explosion
     const radius = randomRange(...type.radius);
+    const ParticleClass = type.particleClass;
 
     for (const { angle, speedScale } of PATTERNS[type.pattern](count)) {
-      this.display.add(new FireworkParticle({
-        x: this.x, y: this.y, angle, radius, hue: this.hue,
+      this.display.add(new ParticleClass({
+        x: this.x,
+        y: this.y,
+        angle,
+        radius,
+        hue: this.hue,
         speed: speed * speedScale,
+        display: this.display,
         ...type.physics,
       }));
     }
@@ -65,7 +71,7 @@ export class FireworkRocket {
 
       // Place each spark somewhere along this frame's path
       const y = fromY + (toY - fromY) * Math.random();
-      this.display.add(new Spark(this.x, y, this.hue, this.vy * 0.15 + randomRange(0.5, 1.5)));
+      this.display.add(new Spark({ x: this.x, y, hue: this.hue, vy: this.vy * 0.15 + randomRange(0.5, 1.5) }));
     }
   }
 
