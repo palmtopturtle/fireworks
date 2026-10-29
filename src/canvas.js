@@ -1,4 +1,7 @@
-import { MAX_DPR, REFERENCE_SIZE, MIN_WORLD_SCALE, PXL } from "./constants.js";
+const MAX_DPR = 2;
+const REFERENCE_SIZE = 640; // Smallest viewport size to render full world scale (worldScale = 1)
+const MIN_WORLD_SCALE = 0.6; // Do not shrink scale beyond this
+const PXL = 2; // One "pixel" for consistent stylized, pixelated drawing
 
 /* Initialize canvases */
 export const fireworksCanvasElement = document.createElement("canvas");

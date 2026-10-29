@@ -1,4 +1,4 @@
-import { TWOPI } from "./constants.js";
+export const TWOPI = Math.PI * 2;
 
 export function randomRange(min, max) {
   return Math.random() * (max - min) + min;

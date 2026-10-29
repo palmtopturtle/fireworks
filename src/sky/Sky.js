@@ -1,6 +1,7 @@
-import { STAR_DENSITY } from "../constants.js";
 import { skyCanvas, viewWidth, viewHeight } from "../canvas.js";
 import { Star } from "./Star.js";
+
+const STAR_DENSITY = 1 / 9000; // One star per ~95×95 px area
 
 /* Manages entities drawn for the night sky */
 export class Sky {

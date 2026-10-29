@@ -1,6 +1,7 @@
-import { TWOPI, STAR_COLOR } from "../constants.js";
 import { skyCanvas, viewWidth, viewHeight, stylePxl, snapToPxl } from "../canvas.js";
-import { randomRange } from "../utils.js";
+import { randomRange, TWOPI } from "../utils.js";
+
+const STAR_COLOR = "255, 252, 235";
 
 /* Sparkle helper */
 function drawSparkle(x, y, arm, alpha) {
